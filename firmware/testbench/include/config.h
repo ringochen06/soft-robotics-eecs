@@ -1,0 +1,50 @@
+// Pin map and options for the test bench firmware.
+// Change pins here after wiring; nothing else should need editing.
+// Pins avoid 0/1 so the same map works on a Leonardo and an Uno/RedBoard.
+#pragma once
+
+// ---- Pump: Kamoer KCPA600 (brushed DC) on a BTS7960 driver ----
+// Matches Aiden's wiring (firmware/pump).
+#define PIN_PUMP_R_EN 8
+#define PIN_PUMP_RPWM 9   // forward PWM (Timer1 / OC1A on both boards)
+#define PIN_PUMP_L_EN 12
+#define PIN_PUMP_LPWM 11  // reverse PWM
+
+// 1 = run the forward PWM at ~20 kHz to remove motor whine (pin 9 only).
+// Leave at 0 until it has been tried on the bench; 0 keeps analogWrite (~490 Hz),
+// which is what the pump has been running on.
+#define PUMP_PWM_20KHZ 0
+
+// ---- Steering: two linear actuators on one L298N ----
+#define PIN_ACT_A_EN 5    // ENA (PWM)
+#define PIN_ACT_A_IN1 4
+#define PIN_ACT_A_IN2 7
+#define PIN_ACT_B_EN 6    // ENB (PWM)
+#define PIN_ACT_B_IN1 A1  // IN3
+#define PIN_ACT_B_IN2 A2  // IN4
+
+// Flip if an actuator retracts when it should extend.
+#define ACT_A_REVERSED 0
+#define ACT_B_REVERSED 0
+
+// ---- Load cell: HX711 ----
+#define PIN_HX711_DOUT 2
+#define PIN_HX711_SCK 3
+// Default calibration factor (raw counts per gram). Overwritten by CALIB and
+// stored in EEPROM. 455 is the value the summer team used for their load cell.
+#define HX711_DEFAULT_SCALE 455.0f
+
+// ---- Manual controls ----
+#define PIN_POT A0        // pump speed knob (manual mode)
+#define PIN_JOY_X A3      // joystick X axis (manual steering)
+#define PIN_ESTOP 10      // emergency stop button to GND (INPUT_PULLUP)
+#define USE_ESTOP 1       // set 0 if no button is wired, or the floating pin may trip it
+#define JOY_DEADBAND 60   // ADC counts around center ignored
+
+// ---- Extra analog inputs (actuator position feedback or pressure sensors) ----
+#define PIN_AN_1 A4
+#define PIN_AN_2 A5
+
+// ---- Serial ----
+#define SERIAL_BAUD 115200
+#define DEFAULT_STREAM_HZ 20
