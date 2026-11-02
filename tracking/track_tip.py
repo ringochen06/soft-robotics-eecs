@@ -14,8 +14,14 @@ Typical use:
   python tracking/track_tip.py run.mov --hsv 40 80 80 80 255 255 --px-per-mm 4.2 --plot
   python tracking/track_tip.py old.mov --mode roi --px-per-mm 4.2 --plot
 
+To line the video up with the data log, keep the board's status LED in view and
+send MARK (sweep.py steer does it for you). --select-led gives the box around
+the LED; --led X Y W H adds its brightness to the CSV as the "led" column, which
+analysis/merge_video_log.py uses.
+
 Output: <video>_track.csv (one row per frame) and, with --plot, <video>_track.png.
 Positions are relative to where the tip starts; x is to the right and y is up.
+bend_deg is relative to the first frame, counterclockwise positive as seen in the video.
 """
 
 import argparse
@@ -69,6 +75,24 @@ def find_marker(hsv, rng, min_area):
         return None
     m = cv2.moments(c)
     return (m["m10"] / m["m00"], m["m01"] / m["m00"])
+
+
+def led_brightness(frame, box):
+    """Mean brightness (HSV value) inside the LED box."""
+    x, y, w, h = box
+    patch = frame[y:y + h, x:x + w]
+    return float(patch.max(axis=2).mean()) if patch.size else float("nan")
+
+
+def rising_edges(values, min_range=30.0):
+    """Indices where the values jump from the dark half to the bright half."""
+    v = np.asarray(values, float)
+    ok = ~np.isnan(v)
+    if ok.sum() < 2 or np.nanmax(v) - np.nanmin(v) < min_range:
+        return []
+    threshold = (np.nanmax(v) + np.nanmin(v)) / 2
+    bright = np.where(ok, v >= threshold, False)
+    return [i for i in range(1, len(v)) if bright[i] and not bright[i - 1]]
 
 
 def make_tracker():
@@ -141,6 +165,16 @@ def pick_colors(path, fps, start):
     print(f"\nSuggested: --hsv {h_lo % 180} {s_lo} {v_lo} {h_hi % 180} 255 255")
 
 
+def select_led(path, fps, start):
+    cap, _ = open_video(path, fps)
+    frame = read_frame_at(cap, fps, start)
+    print("Draw a small box around the status LED, then press Enter.")
+    box = cv2.selectROI("select the LED", frame, False)
+    cv2.destroyAllWindows()
+    if box and box[2] > 0:
+        print(f"\n--led {box[0]} {box[1]} {box[2]} {box[3]}")
+
+
 def calibrate(path, fps, start):
     cap, _ = open_video(path, fps)
     frame = read_frame_at(cap, fps, start)
@@ -207,7 +241,10 @@ def track(args, fps):
                 if found:
                     tip = (box[0] + box[2] / 2, box[1] + box[3] / 2)
 
-        rows.append({"frame": frame_idx, "t_s": t, "tip": tip, "base": base})
+        row = {"frame": frame_idx, "t_s": t, "tip": tip, "base": base}
+        if args.led:
+            row["led"] = led_brightness(frame, args.led)
+        rows.append(row)
 
         if args.annotate:
             if writer is None:
@@ -270,6 +307,8 @@ def analyze(rows, args):
         }
         if angle is not None:
             row["bend_deg"] = None if np.isnan(angle[i]) else round(angle[i], 2)
+        if "led" in r:
+            row["led"] = round(r["led"], 1)
         out.append(row)
 
     last = len(found) - 1 - np.argmax(found[::-1])
@@ -286,6 +325,9 @@ def analyze(rows, args):
     if angle is not None and np.isfinite(angle).any():
         summary["max_bend_deg"] = round(float(np.nanmax(angle)), 2)
         summary["min_bend_deg"] = round(float(np.nanmin(angle)), 2)
+    if args.led:
+        flashes = rising_edges([r["led"] for r in rows])
+        summary["led_flashes_s"] = " ".join(f"{t[i]:.3f}" for i in flashes) or "none"
     return out, summary, unit
 
 
@@ -339,6 +381,9 @@ def main():
     ap.add_argument("--out", type=pathlib.Path, help="CSV path (default: <video>_track.csv)")
     ap.add_argument("--plot", action="store_true", help="save a PNG plot next to the CSV")
     ap.add_argument("--annotate", type=pathlib.Path, help="write a video with the tracked points drawn")
+    ap.add_argument("--led", type=int, nargs=4, metavar=("X", "Y", "W", "H"),
+                    help="box around the status LED: adds its brightness (led column) for syncing with the log")
+    ap.add_argument("--select-led", action="store_true", help="draw a box around the LED to get --led")
     ap.add_argument("--pick", action="store_true", help="click the marker to get an HSV range")
     ap.add_argument("--calibrate", action="store_true", help="click two points to get px/mm")
     args = ap.parse_args()
@@ -349,6 +394,8 @@ def main():
         return pick_colors(args.video, fps, args.start)
     if args.calibrate:
         return calibrate(args.video, fps, args.start)
+    if args.select_led:
+        return select_led(args.video, fps, args.start)
     if args.mode == "color" and not args.hsv:
         sys.exit("error: color mode needs --hsv (run with --pick to find it), or use --mode roi")
 

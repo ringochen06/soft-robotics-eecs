@@ -59,6 +59,7 @@ class TestBench:
         self.ser.reset_input_buffer()
         self.columns = None
         self.info = None
+        self.info_fields = {}
         self.samples = queue.Queue()
         self.replies = queue.Queue()
         self.messages = queue.Queue()
@@ -74,7 +75,9 @@ class TestBench:
         buf = b""
         while not self._stop.is_set():
             try:
-                chunk = self.ser.read(256)
+                # Read what has arrived (at least 1 byte) so each line is time-stamped
+                # as it comes in, not when a 256-byte block fills up.
+                chunk = self.ser.read(self.ser.in_waiting or 1)
             except (serial.SerialException, OSError):
                 self.messages.put("# serial connection lost")
                 break
@@ -101,6 +104,12 @@ class TestBench:
             self.columns = line.split(",")[1:]
         elif line.startswith("I,"):
             self.info = line[2:]
+            parts = self.info.split(",")
+            fields = {"name": parts[0], "version": parts[1] if len(parts) > 1 else ""}
+            for part in parts[2:]:
+                key, _, value = part.partition("=")
+                fields[key] = _convert(value)
+            self.info_fields = fields
         elif line.startswith("OK") or line.startswith("ERR"):
             self.replies.put(line)
         else:
@@ -141,6 +150,13 @@ class TestBench:
         """Throw away queued samples (e.g. before starting a measurement)."""
         while not self.samples.empty():
             self.samples.get_nowait()
+
+    def pop_messages(self):
+        """Return the status lines (# ...) received since the last call."""
+        out = []
+        while not self.messages.empty():
+            out.append(self.messages.get_nowait())
+        return out
 
     def collect(self, seconds):
         """Return the samples received over the next `seconds` seconds."""
