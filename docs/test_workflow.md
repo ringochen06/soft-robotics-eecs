@@ -14,7 +14,7 @@ It walks through telemetry, emergency stop, load cell, pump, actuator A, actuato
 
 ## Before every session
 
-1. Flash `firmware/testbench` if the board has other code on it. `python datalog/log_data.py --duration 3` should print `Connected ... fams-sr-testbench 0.2.0`.
+1. Flash `firmware/testbench` if the board has other code on it. `python datalog/log_data.py --duration 3` should print `Connected ... fams-sr-testbench 0.2.1`.
 2. Check the emergency stop: press it and confirm the pump stops.
 3. Keep water away from the Arduino and drivers; route tubing below the electronics.
 4. Load cell: `TARE` with nothing on it, then `CALIB <grams>` with a known mass (a 20 g or 50 g weight). Re-check with a second mass; it should read within about 2%.

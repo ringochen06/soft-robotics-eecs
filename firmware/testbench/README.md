@@ -25,14 +25,14 @@ This builds `src/main.cpp` for this computer against a fake Arduino (`test/shim/
 
 ## Wiring
 
-All pins are set in `include/config.h`. Change them there if the wiring differs.
+All pins are set in `include/config.h`. Change them there if the wiring differs. The actuator pins match Aiden's wiring of the lab setup (11/4).
 
 | Part | Signal | Pin |
 |---|---|---|
 | Pump driver (BTS7960) | R_EN / RPWM / L_EN / LPWM | 8 / 9 / 12 / 11 |
-| Actuator A (L298N channel A) | ENA / IN1 / IN2 | 5 / 4 / 7 |
-| Actuator B (L298N channel B) | ENB / IN3 / IN4 | 6 / A1 / A2 |
-| Load cell (HX711) | DOUT / SCK | 2 / 3 |
+| Actuator A (L298N channel A) | ENA / IN1 / IN2 | 6 / 7 / 2 |
+| Actuator B (L298N channel B) | ENB / IN3 / IN4 | 5 / 3 / 4 |
+| Load cell (HX711) | DOUT / SCK | A1 / A2 |
 | Pump knob | wiper | A0 |
 | Joystick | X axis | A3 |
 | Emergency stop | button to GND | 10 |
@@ -43,12 +43,13 @@ All pins are set in `include/config.h`. Change them there if the wiring differs.
 - Remove the ENA/ENB jumpers on the L298N, or the actuators run at full speed whatever the PWM.
 - The L298N is rated about 2 A per channel and drops about 2 V. Start at low PWM and feel whether it gets hot; if it does, use a bigger driver (below).
 - If no emergency stop button is wired, set `USE_ESTOP 0`, or a floating pin 10 can trip it.
+- Pin 13 is an output (status LED). Do not connect it to GND or 5V. Pin 10 is only for the emergency stop: connecting it to GND stops everything. There are no actuator buttons; drive the actuators from the computer (`ACT`, `STEER`) or the joystick in manual mode.
 
 ### Other actuator drivers
 
 Set `ACT_DRIVER` in `config.h`:
 
-- `ACT_DRIVER_EN_IN` (default): L298N as above. A BTS7960 also works this way: R_EN and L_EN together on the EN pin (5 or 6), RPWM on IN1, LPWM on IN2.
+- `ACT_DRIVER_EN_IN` (default): L298N as above. A BTS7960 also works this way: R_EN and L_EN together on the EN pin (6 or 5), RPWM on IN1, LPWM on IN2.
 - `ACT_DRIVER_PWM_DIR`: drivers with one PWM pin and one direction pin (e.g. Cytron MD10C, MDD10A). PWM on the EN pin, DIR on IN1; IN2 is not used.
 
 ## Travel limit
@@ -92,7 +93,7 @@ A new command for an output replaces a timed one that is still running.
 ## Data format
 
 ```
-I,fams-sr-testbench,0.2.0,scale=455.000,hx711=ok,limit_ms=2000,driver=en_in
+I,fams-sr-testbench,0.2.1,scale=455.000,hx711=ok,limit_ms=2000,driver=en_in
 H,t_ms,mode,pump,act_a,act_b,pos_a,pos_b,force_g,an1,an2,pot,joy,estop,mark
 D,10234,S,0,150,-150,412,-412,3.21,512,498,0,511,0,0
 ```

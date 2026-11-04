@@ -138,7 +138,7 @@ class Check:
     def loadcell(self):
         print("\n[loadcell]")
         if self.bench.info_fields.get("hx711") != "ok":
-            return self.result("loadcell", "FAIL", "HX711 not found at power-up: check DT -> 2, SCK -> 3, VCC -> 5V, GND, then reset the board")
+            return self.result("loadcell", "FAIL", "HX711 not found at power-up: check DT -> A1, SCK -> A2, VCC -> 5V, GND, then reset the board")
         if not ready("Leave the load cell unloaded (nothing touching it)."):
             return self.result("loadcell", "SKIP", "skipped")
         self.bench.command("TARE", timeout=10)
@@ -201,7 +201,7 @@ class Check:
         elif answer == "r":
             self.result(step, "WARN", f"runs backwards: set ACT_{name}_REVERSED 1 in config.h and re-flash (or swap its two motor wires){sensed}")
         else:
-            pins = "ENA 5, IN1 4, IN2 7" if name == "A" else "ENB 6, IN3 A1, IN4 A2"
+            pins = "ENA 6, IN1 7, IN2 2" if name == "A" else "ENB 5, IN3 3, IN4 4"
             self.result(step, "FAIL", f"did not move: check {pins}, the EN jumper removed, the 12 V supply and a common ground")
 
     def steer(self):

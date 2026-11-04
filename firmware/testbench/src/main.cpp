@@ -14,7 +14,7 @@
 #include "config.h"
 
 static const char FW_NAME[] = "fams-sr-testbench";
-static const char FW_VERSION[] = "0.2.0";
+static const char FW_VERSION[] = "0.2.1";
 
 static const uint16_t EEPROM_MAGIC = 0xFA55;
 static const int EEPROM_ADDR_MAGIC = 0;

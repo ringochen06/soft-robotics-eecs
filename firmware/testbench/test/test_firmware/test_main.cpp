@@ -91,7 +91,7 @@ void tearDown() {}
 void test_ping_and_info() {
   TEST_ASSERT_TRUE(has(send("PING"), "OK PONG"));
   std::string info = send("INFO");
-  TEST_ASSERT_TRUE(has(info, "I,fams-sr-testbench,0.2.0,scale=455.000,hx711=ok,limit_ms=2000,driver="));
+  TEST_ASSERT_TRUE(has(info, "I,fams-sr-testbench,0.2.1,scale=455.000,hx711=ok,limit_ms=2000,driver="));
   size_t h = info.find("H,");
   TEST_ASSERT_TRUE(h != std::string::npos);
   header = split(info.substr(h, info.find('\r', h) - h));

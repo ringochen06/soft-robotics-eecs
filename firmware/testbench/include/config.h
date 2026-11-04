@@ -28,12 +28,13 @@
 #define ACT_DRIVER ACT_DRIVER_EN_IN
 #endif
 
-#define PIN_ACT_A_EN 5    // ENA (PWM)
-#define PIN_ACT_A_IN1 4
-#define PIN_ACT_A_IN2 7
-#define PIN_ACT_B_EN 6    // ENB (PWM)
-#define PIN_ACT_B_IN1 A1  // IN3
-#define PIN_ACT_B_IN2 A2  // IN4
+// Matches Aiden's wiring of the lab setup (11/4).
+#define PIN_ACT_A_EN 6    // ENA (PWM)
+#define PIN_ACT_A_IN1 7
+#define PIN_ACT_A_IN2 2
+#define PIN_ACT_B_EN 5    // ENB (PWM)
+#define PIN_ACT_B_IN1 3   // IN3
+#define PIN_ACT_B_IN2 4   // IN4
 
 // Flip if an actuator retracts when it should extend.
 #define ACT_A_REVERSED 0
@@ -49,8 +50,9 @@
 #define ACT_TRAVEL_LIMIT_MS 2000
 
 // ---- Load cell: HX711 ----
-#define PIN_HX711_DOUT 2
-#define PIN_HX711_SCK 3
+// On analog pins used as digital, since 2 and 3 now drive the actuators.
+#define PIN_HX711_DOUT A1
+#define PIN_HX711_SCK A2
 // Default calibration factor (raw counts per gram). Overwritten by CALIB and
 // stored in EEPROM. 455 is the value the summer team used for their load cell.
 #define HX711_DEFAULT_SCALE 455.0f

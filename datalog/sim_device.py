@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fake test bench board for trying the scripts without hardware (macOS/Linux).
 
-It speaks the same serial protocol as firmware/testbench (0.2.0), including
+It speaks the same serial protocol as firmware/testbench (0.2.1), including
 timed commands, the actuator travel estimate and limit, and MARK. The numbers
 are made up but plausible: thrust rises with pump PWM, and an1/an2 act like
 actuator position sensors that follow the actuators.
@@ -19,7 +19,7 @@ import select
 import time
 import tty
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 HEADER = "H,t_ms,mode,pump,act_a,act_b,pos_a,pos_b,force_g,an1,an2,pot,joy,estop,mark"
 MAX_DURATION_MS = 600000
 MARK_MS = 200
